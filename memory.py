@@ -25,7 +25,7 @@ class JarvisMemory:
             return self._create_default_memory()
     
     def _create_default_memory(self) -> Dict[str, Any]:
-        """Create default memory structure."""
+        """Create enhanced default memory structure."""
         return {
             "owner": "Sulekh",
             "city": "Indore",
@@ -33,18 +33,21 @@ class JarvisMemory:
                 "news": "technology",
                 "music": "lofi",
                 "language": "en-in",
-                "units": "celsius"
+                "units": "celsius",
+                "voice_speed": 150
             },
             "habits": {
                 "wake_time": "07:00",
                 "sleep_time": "23:00",
                 "favorite_apps": ["chrome", "youtube", "vs code"],
-                "common_tasks": []
+                "common_tasks": [],
+                "usage_patterns": {}
             },
             "learned_responses": {},
             "contacts": {},
             "calendar": {},
-            "notes": []
+            "notes": [],
+            "system_stats": {}
         }
     
     def save_memory(self):
@@ -118,20 +121,26 @@ class JarvisMemory:
         self.save_memory()
     
     def get_context_summary(self) -> str:
-        """Get summary for AI context."""
+        """Enhanced context summary with smart suggestions."""
         owner = self.memory.get("owner", "Sir")
         city = self.memory.get("city", "")
         habits = self.memory.get("habits", {})
         recent = self.get_recent_conversations(3)
         
-        summary = f"User: {owner}, Location: {city}. "
+        # Time-based context
+        current_hour = datetime.now().hour
+        time_context = "morning" if 5 <= current_hour < 12 else "afternoon" if 12 <= current_hour < 17 else "evening" if 17 <= current_hour < 21 else "night"
+        
+        summary = f"User: {owner}, Location: {city}, Time: {time_context}. "
         
         if habits:
-            summary += f"Known habits: {', '.join(habits.get('favorite_apps', []))}. "
+            apps = habits.get('favorite_apps', [])
+            if apps:
+                summary += f"Favorite apps: {', '.join(apps[:3])}. "
         
         if recent:
-            summary += "Recent context: "
+            summary += "Recent: "
             for conv in recent[-2:]:
-                summary += f"User said '{conv['user_input']}'. "
+                summary += f"'{conv['user_input']}' -> {conv.get('intent', 'unknown')}. "
         
         return summary

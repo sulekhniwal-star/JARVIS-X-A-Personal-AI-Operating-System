@@ -6,7 +6,7 @@ from typing import Tuple, Dict, Any
 class IntentDetector:
     """AI-powered intent detection using Gemini API."""
     
-    # Built-in intents with keywords (fallback)
+    # Enhanced intent patterns
     INTENT_KEYWORDS = {
         'greeting': ['hello', 'hi', 'hey', 'good morning', 'good evening', 'namaste'],
         'time': ['time', 'what time', 'current time', 'what\'s the time'],
@@ -14,6 +14,8 @@ class IntentDetector:
         'weather': ['weather', 'temperature', 'rain', 'forecast', 'how\'s the weather'],
         'open_app': ['open', 'launch', 'start'],
         'volume': ['volume', 'mute', 'unmute', 'sound'],
+        'system_info': ['system info', 'system status', 'cpu', 'memory', 'performance'],
+        'screenshot': ['screenshot', 'capture screen', 'take picture'],
         'shutdown': ['shutdown', 'turn off', 'power off', 'sleep'],
         'restart': ['restart', 'reboot'],
         'exit': ['exit', 'quit', 'goodbye', 'bye'],
@@ -52,7 +54,7 @@ Context: {context if context else "No previous context"}
 
 Respond ONLY with valid JSON (no markdown, no extra text):
 {{
-    "intent": "one_of_these: greeting, time, joke, weather, open_app, volume, shutdown, restart, exit, ai_response",
+    "intent": "one_of_these: greeting, time, joke, weather, open_app, volume, system_info, screenshot, shutdown, restart, exit, ai_response",
     "confidence": 0.0-1.0,
     "app_name": "if open_app intent, specify app name, else null",
     "action": "specific action if applicable, else null",

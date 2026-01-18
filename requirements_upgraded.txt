@@ -1,0 +1,61 @@
+# Core Dependencies (Existing)
+SpeechRecognition>=3.10.0
+sounddevice>=0.4.6
+soundfile>=0.12.1
+requests>=2.31.0
+google-generativeai>=0.3.0
+pyjokes>=0.6.3
+pycaw>=20230226
+PyQt5>=5.15.9
+numpy>=1.24.0
+gtts>=2.4.0
+pyttsx3>=2.90
+
+# Enhanced Speech Recognition
+whisper>=1.1.10
+vosk>=0.3.45
+
+# Enhanced TTS
+edge-tts>=6.1.9
+pygame>=2.5.2
+
+# System Automation
+pyautogui>=0.9.54
+psutil>=5.9.6
+pywin32>=306
+
+# Enhanced Memory & Database
+sqlite3  # Built-in with Python
+
+# Optional Dependencies for Advanced Features
+# Uncomment if you want these features:
+
+# For better audio processing
+# librosa>=0.10.1
+# scipy>=1.11.4
+
+# For advanced NLP
+# spacy>=3.7.2
+# transformers>=4.35.0
+
+# For computer vision (if adding face recognition)
+# opencv-python>=4.8.1
+# face-recognition>=1.3.0
+
+# For web automation
+# selenium>=4.15.0
+
+# For email automation
+# smtplib  # Built-in with Python
+# imaplib  # Built-in with Python
+
+# For calendar integration
+# google-api-python-client>=2.108.0
+# google-auth-httplib2>=0.1.1
+# google-auth-oauthlib>=1.1.0
+
+# Installation Notes:
+# 1. Install PyTorch for Whisper: pip install torch torchvision torchaudio
+# 2. Download Vosk model: https://alphacephei.com/vosk/models
+# 3. For pycaw on Windows: pip install pycaw
+# 4. For system automation: pip install pyautogui pywin32

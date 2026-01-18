@@ -25,6 +25,30 @@ import soundfile as sf
 import numpy as np
 import io
 
+# Enhanced speech recognition
+try:
+    import whisper
+    HAS_WHISPER = True
+except ImportError:
+    HAS_WHISPER = False
+    print("⚠️ Whisper not available - using Google Speech only")
+
+# System monitoring
+try:
+    import psutil
+    HAS_PSUTIL = True
+except ImportError:
+    HAS_PSUTIL = False
+    print("⚠️ psutil not available - system info disabled")
+
+# Screenshot capability
+try:
+    import pyautogui
+    HAS_PYAUTOGUI = True
+except ImportError:
+    HAS_PYAUTOGUI = False
+    print("⚠️ pyautogui not available - screenshot disabled")
+
 # Try to import pycaw for audio control
 try:
     from comtypes import CLSCTX_ALL
@@ -152,39 +176,44 @@ class JarvisAssistant:
             print(f"❌ Speech error: {e}")
     
     def listen_with_sounddevice(self, timeout: int = 5) -> str:
-        """Capture audio using sounddevice and send to Google Speech Recognition API."""
+        """Enhanced audio capture with Whisper support."""
         try:
-            print("🎤 Listening (sounddevice)...")
-            
-            # Use sounddevice to record audio
-            sample_rate = 16000  # Google Speech Recognition requires 16kHz
-            duration = timeout
+            print("🎤 Listening (enhanced)...")
+            sample_rate = 16000
             
             # Record audio
-            audio_data = sd.rec(int(sample_rate * duration), samplerate=sample_rate, channels=1, dtype='float32')
-            sd.wait()  # Wait for recording to complete
-            
-            # Convert numpy array to bytes for sr.AudioData
-            audio_bytes = (audio_data * 32767).astype(np.int16).tobytes()
-            
-            # Create sr.AudioData object
-            audio = sr.AudioData(audio_bytes, sample_rate, 2)
+            audio_data = sd.rec(int(sample_rate * timeout), samplerate=sample_rate, channels=1, dtype='float32')
+            sd.wait()
             
             print("🔄 Processing...")
+            
+            # Try Whisper first (best accuracy)
+            if HAS_WHISPER:
+                try:
+                    model = whisper.load_model("base")
+                    result = model.transcribe(audio_data.flatten())
+                    text = result["text"].strip()
+                    if text:
+                        print(f"👤 You (Whisper): {text}")
+                        return text.lower()
+                except Exception as e:
+                    print(f"⚠️ Whisper failed: {e}")
+            
+            # Fallback to Google
+            audio_bytes = (audio_data * 32767).astype(np.int16).tobytes()
+            audio = sr.AudioData(audio_bytes, sample_rate, 2)
             query = self.recognizer.recognize_google(audio, language='en-in')
-            print(f"👤 You: {query}")
+            print(f"👤 You (Google): {query}")
             return query.lower()
         
         except sr.UnknownValueError:
             print("❌ Could not understand audio")
-            self.speak("Sorry, I didn't catch that. Could you repeat?")
             return None
         except sr.RequestError as e:
             print(f"❌ API Error: {e}")
-            self.speak("There's a network issue. Please check your connection.")
             return None
         except Exception as e:
-            print(f"❌ Sounddevice error: {type(e).__name__}: {e}")
+            print(f"❌ Speech error: {e}")
             return None
 
     def listen(self, timeout: int = 5) -> str:
@@ -302,13 +331,30 @@ class JarvisAssistant:
             level = metadata.get('level')
             self._control_volume(action, level)
         
+        elif intent == 'system_info':
+            info = self.get_system_info()
+            if info:
+                response = f"System status: CPU {info['cpu_percent']:.1f}%, Memory {info['memory_percent']:.1f}%, Disk {info['disk_percent']:.1f}%"
+            else:
+                response = "Could not get system information"
+            self.speak(response)
+        
+        elif intent == 'screenshot':
+            if not HAS_PYAUTOGUI:
+                response = "Screenshot feature not available - pyautogui not installed"
+            else:
+                try:
+                    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+                    filename = f"screenshot_{timestamp}.png"
+                    pyautogui.screenshot(filename)
+                    response = f"Screenshot saved as {filename}"
+                except Exception as e:
+                    response = "Could not take screenshot"
+            self.speak(response)
+        
         elif intent == 'shutdown':
             self.speak("Shutting down the system")
             os.system("shutdown /s /t 5")
-        
-        elif intent == 'restart':
-            self.speak("Restarting the system")
-            os.system("shutdown /r /t 5")
         
         elif intent == 'exit':
             self.speak("Goodbye! It was a pleasure assisting you.")
@@ -412,6 +458,24 @@ class JarvisAssistant:
         except Exception as e:
             print(f"❌ Volume control error: {type(e).__name__}: {e}")
             self.speak("I couldn't control the volume")
+    
+    def get_system_info(self) -> Dict[str, any]:
+        """Get system information."""
+        if not HAS_PSUTIL:
+            return {}
+        try:
+            cpu_percent = psutil.cpu_percent(interval=1)
+            memory = psutil.virtual_memory()
+            disk = psutil.disk_usage('/')
+            
+            return {
+                'cpu_percent': cpu_percent,
+                'memory_percent': memory.percent,
+                'disk_percent': round((disk.used / disk.total) * 100, 1)
+            }
+        except Exception as e:
+            print(f"❌ System info error: {e}")
+            return {}
     
     def on_wake_word(self):
         """Callback when wake word is detected."""
