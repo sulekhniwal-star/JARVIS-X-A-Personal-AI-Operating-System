@@ -70,7 +70,7 @@ class IntentDetector:
 `{', '.join(possible_intents)}`
 
 ## Examples
-User Input: "Hey Jarvis, what's the weather like in London?"
+User Input: "Hey Jarvis, what\'s the weather like in London?"
 JSON Output:
 {{
     "intent": "weather",
@@ -234,7 +234,7 @@ Respond with the JSON output:
     def get_ai_response(self, prompt: str, context: str = "") -> str:
         """Get a conversational response from Gemini."""
         if not self.use_ai:
-            return "I'm sorry, I need a valid API key to process that. Please configure your Gemini API key."
+            return "I\'m sorry, I need a valid API key to process that. Please configure your Gemini API key."
         
         try:
             # Add context to the prompt for better responses
