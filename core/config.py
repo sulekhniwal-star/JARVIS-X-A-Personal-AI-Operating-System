@@ -1,9 +1,6 @@
 """Configuration settings for the JARVIS AI assistant."""
 
 import os
-from dotenv import load_dotenv
-
-load_dotenv()
 
 # API Key read from environment variable
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
