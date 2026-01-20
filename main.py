@@ -4,6 +4,7 @@ import sys
 from core.config import validate_config
 from core.assistant import JarvisAssistant
 from face_login import FaceLogin
+from voice_login import VoiceLogin
 
 def main():
     try:
@@ -16,6 +17,12 @@ def main():
         face_login = FaceLogin()
         if not face_login.authenticate():
             print("Access denied.")
+            sys.exit(1)
+        
+        # Voice authentication
+        voice_login = VoiceLogin()
+        if not voice_login.authenticate():
+            print("Voice authentication failed.")
             sys.exit(1)
         
         print("Welcome back, Sulekh.")
