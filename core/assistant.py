@@ -9,6 +9,7 @@ from core.intent_classifier import IntentClassifier
 from core.personality import PersonalityManager
 from core.self_coder import SelfCoder
 from core.agent_mode import AgentMode
+from core.skill_learner import SkillLearner
 from utils.memory import Memory
 from utils.persistent_memory import PersistentMemory
 from utils.file_indexer import FileIndexer
@@ -28,6 +29,7 @@ class JarvisAssistant:
         self.intent_classifier = IntentClassifier()
         self.personality = PersonalityManager()
         self.self_coder = SelfCoder()
+        self.skill_learner = SkillLearner()
         self.memory = Memory()
         self.persistent_memory = PersistentMemory()
         self.file_indexer = FileIndexer("C:\\")
@@ -121,6 +123,25 @@ class JarvisAssistant:
                     if "exit" in command_lower or "shutdown jarvis" in command_lower:
                         self.tts.speak("Goodbye! Shutting down Jarvis.")
                         break
+                    
+                    # Check for skill learning commands
+                    if "learn a new skill:" in command_lower:
+                        skill_name = command_lower.split("learn a new skill:", 1)[1].strip()
+                        
+                        # Ask what the skill should do
+                        self.tts.speak("What should this skill do?")
+                        description = self.stt.listen()
+                        
+                        if description:
+                            response = self.skill_learner.learn_skill(skill_name, description)
+                        else:
+                            response = "No description provided. Skill learning cancelled."
+                        
+                        response = self.personality.apply_style(response)
+                        self.tts.speak(response)
+                        self.memory.add(command, response)
+                        self.persistent_memory.save(command, response)
+                        continue
                     
                     # Check for email sending commands
                     if "send email to" in command_lower:
