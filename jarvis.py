@@ -61,6 +61,16 @@ try:
 except ImportError:
     psutil = None  # type: ignore
 
+try:
+    import yfinance as yf  # type: ignore
+except ImportError:
+    yf = None  # type: ignore
+
+try:
+    import pywhatkit  # type: ignore
+except ImportError:
+    pywhatkit = None  # type: ignore
+
 import json
 
 # Load environment variables
@@ -85,6 +95,23 @@ class JarvisAgent:
 
         self.recognizer = sr.Recognizer()  # type: ignore
         self.microphone = sr.Microphone()  # type: ignore
+
+        # Initialize Vosk for offline wake word detection
+        self.vosk_recognizer = None
+        if vosk:
+            try:
+                # You may need to download a Vosk model (e.g., vosk-model-small-en-us-0.15)
+                # For now, we'll assume it's in a 'model' directory
+                model_path = "model"
+                if os.path.exists(model_path):
+                    self.vosk_recognizer = vosk.Model(model_path)  # type: ignore
+                    logger.info("🤖 Vosk model loaded for offline wake word detection")
+                else:
+                    logger.warning("Vosk model not found. Wake word detection will use Google (online). Download a model from https://alphacephei.com/vosk/models")
+            except Exception as e:
+                logger.error(f"Failed to load Vosk model: {e}")
+        else:
+            logger.warning("Vosk not installed. Wake word detection will use Google (online).")
 
         # Initialize Gemini with function calling
         self._setup_gemini()
@@ -207,6 +234,33 @@ class JarvisAgent:
                             },
                             "required": ["action"]
                         }
+                    },
+                    {
+                        "name": "play_youtube",
+                        "description": "Play a video or song on YouTube",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "topic": {"type": "string", "description": "The name of the video or song to play"}
+                            },
+                            "required": ["topic"]
+                        }
+                    },
+                    {
+                        "name": "get_stock_price",
+                        "description": "Get the current stock price of a company",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "ticker": {"type": "string", "description": "The stock ticker symbol (e.g., AAPL, GOOGL)"}
+                            },
+                            "required": ["ticker"]
+                        }
+                    },
+                    {
+                        "name": "check_system_health",
+                        "description": "Check CPU and RAM usage",
+                        "parameters": {"type": "object", "properties": {}}
                     }
                 ]
             }
@@ -228,20 +282,20 @@ class JarvisAgent:
         """Listen for speech input asynchronously"""
         try:
             with self.microphone as source:  # type: ignore
-                self.recognizer.adjust_for_ambient_noise(source, duration=0.5)  # type: ignore
-            
+                self.recognizer.adjust_for_ambient_noise(source, duration=1)  # type: ignore
+
             # Run speech recognition in thread pool to avoid blocking
             loop = asyncio.get_event_loop()
-            
+
             def listen():  # type: ignore
                 with self.microphone as source:  # type: ignore
                     audio = self.recognizer.listen(source, timeout=1, phrase_time_limit=5)  # type: ignore
                 return self.recognizer.recognize_google(audio)  # type: ignore
-            
+
             text = await loop.run_in_executor(None, listen)  # type: ignore
             logger.info(f"👤 User said: {text}")
             return text.lower()  # type: ignore
-            
+
         except sr.WaitTimeoutError:  # type: ignore
             return None
         except sr.UnknownValueError:  # type: ignore
@@ -566,6 +620,40 @@ class JarvisAgent:
         except Exception as e:
             logger.error(f"Sleep error: {e}")
             return "Could not put system to sleep"
+
+    async def play_youtube(self, topic: str) -> str:
+        """Play a video on YouTube"""
+        if pywhatkit is None:
+            return "pywhatkit not available for YouTube playback"
+        try:
+            # pywhatkit runs synchronously, so we run it in an executor
+            await asyncio.get_event_loop().run_in_executor(
+                None, lambda: pywhatkit.playonyt(topic)  # type: ignore
+            )
+            return f"Playing {topic} on YouTube."
+        except Exception as e:
+            logger.error(f"YouTube error: {e}")
+            return "Failed to play video."
+
+    async def get_stock_price(self, ticker: str) -> str:
+        """Get stock price using yfinance"""
+        if yf is None:
+            return "yfinance not available for stock prices"
+        try:
+            stock = yf.Ticker(ticker)  # type: ignore
+            info = stock.info  # type: ignore
+            price = info.get('currentPrice') or info.get('regularMarketPrice')  # type: ignore
+            return f"The current price of {ticker.upper()} is ${price}."
+        except Exception as _:
+            return f"Could not find stock data for {ticker}."
+
+    async def check_system_health(self) -> str:
+        """Check CPU and RAM"""
+        if psutil is None:
+            return "psutil not available for system health check"
+        cpu_usage = psutil.cpu_percent(interval=1)  # type: ignore
+        ram_usage = psutil.virtual_memory().percent  # type: ignore
+        return f"System Health: CPU is at {cpu_usage}%, and RAM is at {ram_usage}%."
     
     async def execute_function_call(self, function_call) -> str:  # type: ignore
         """Execute a function call from Gemini"""
@@ -588,7 +676,10 @@ class JarvisAgent:
             "shutdown_system": self.shutdown_system,
             "restart_system": self.restart_system,
             "sleep_system": self.sleep_system,
-            "system_control": self.system_control
+            "system_control": self.system_control,
+            "play_youtube": self.play_youtube,
+            "get_stock_price": self.get_stock_price,
+            "check_system_health": self.check_system_health
         }
         
         if function_name in function_map:
@@ -645,10 +736,33 @@ class JarvisAgent:
             return "I'm having trouble processing that request right now."
     
     async def wait_for_wake_word(self) -> bool:
-        """Wait for wake word 'jarvis' or 'hey jarvis'"""
-        speech = await self.listen_for_speech()
-        if speech and ("jarvis" in speech or "hey jarvis" in speech):
-            return True
+        """Wait for wake word 'jarvis' or 'hey jarvis' using Vosk (offline)"""
+        if self.vosk_recognizer:  # type: ignore
+            # Use Vosk for offline wake word detection
+            try:
+                with self.microphone as source:  # type: ignore
+                    self.recognizer.adjust_for_ambient_noise(source, duration=1)  # type: ignore
+                    audio = self.recognizer.listen(source, timeout=1, phrase_time_limit=3)  # type: ignore
+
+                    # Convert audio to raw data for Vosk
+                    audio_data = audio.get_raw_data()  # type: ignore
+                    if self.vosk_recognizer.AcceptWaveform(audio_data):  # type: ignore
+                        result = json.loads(self.vosk_recognizer.Result())  # type: ignore
+                        text = result.get("text", "").lower()
+                        if "jarvis" in text or "hey jarvis" in text:
+                            logger.info(f"🤖 Wake word detected (Vosk): {text}")
+                            return True
+            except Exception as e:
+                logger.error(f"Vosk wake word detection error: {e}")
+                # Fallback to Google
+                speech = await self.listen_for_speech()
+                if speech and ("jarvis" in speech or "hey jarvis" in speech):
+                    return True
+        else:
+            # Fallback to Google speech recognition
+            speech = await self.listen_for_speech()
+            if speech and ("jarvis" in speech or "hey jarvis" in speech):
+                return True
         return False
     
     async def run(self):

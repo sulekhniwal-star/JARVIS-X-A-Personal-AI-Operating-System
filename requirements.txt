@@ -1,8 +1,22 @@
-google-generativeai==0.8.3
-edge-tts==6.1.9
-python-dotenv==1.0.1
-requests==2.31.0
-SpeechRecognition==3.10.0
-PyAutoGUI==0.9.54
-duckduckgo-search==3.9.6
-Pillow>=9.0.0
+# Core AI
+google-generativeai>=0.8.3
+
+# Audio (Crucial for 3.14)
+# Note: You may need to install portaudio manually on your OS first
+SpeechRecognition>=3.10.0
+vosk>=0.3.45
+pyttsx3>=2.90  # More stable offline TTS than edge-tts for 3.14, optional
+edge-tts>=6.1.9
+
+# Vision & System
+opencv-python>=4.9.0
+Pillow>=10.2.0
+pyautogui>=0.9.54
+psutil>=5.9.8
+
+# Tools & Web
+duckduckgo-search>=5.0.0
+yfinance>=0.2.36
+pywhatkit>=5.4
+python-dotenv>=1.0.1
+requests>=2.31.0
