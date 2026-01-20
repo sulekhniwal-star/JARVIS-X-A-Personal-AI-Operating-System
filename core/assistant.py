@@ -16,6 +16,7 @@ from utils.goals import GoalsManager
 from skills.web_search import search_web
 from skills.time_date import get_time_date
 from skills.system_control import open_app
+from skills import pc_control
 
 class JarvisAssistant:
     def __init__(self):
@@ -119,6 +120,37 @@ class JarvisAssistant:
                     if "exit" in command_lower or "shutdown jarvis" in command_lower:
                         self.tts.speak("Goodbye! Shutting down Jarvis.")
                         break
+                    
+                    # Check for PC control commands
+                    if command_lower.startswith("type "):
+                        text_to_type = command[5:].strip()  # Remove "type " prefix
+                        response = pc_control.type_text(text_to_type)
+                        
+                        response = self.personality.apply_style(response)
+                        self.tts.speak(response)
+                        self.memory.add(command, response)
+                        self.persistent_memory.save(command, response)
+                        continue
+                    
+                    if command_lower.startswith("press "):
+                        key_to_press = command[6:].strip()  # Remove "press " prefix
+                        response = pc_control.press_key(key_to_press)
+                        
+                        response = self.personality.apply_style(response)
+                        self.tts.speak(response)
+                        self.memory.add(command, response)
+                        self.persistent_memory.save(command, response)
+                        continue
+                    
+                    if command_lower.startswith("open "):
+                        app_to_open = command[5:].strip()  # Remove "open " prefix
+                        response = pc_control.open_app(app_to_open)
+                        
+                        response = self.personality.apply_style(response)
+                        self.tts.speak(response)
+                        self.memory.add(command, response)
+                        self.persistent_memory.save(command, response)
+                        continue
                     
                     # Check for goals management commands
                     if "remember my goal:" in command_lower:
