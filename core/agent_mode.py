@@ -2,7 +2,6 @@ from core.gemini_llm import GeminiLLM
 from core.self_coder import SelfCoder
 from skills.web_search import search_web
 from skills.system_control import open_app
-import re
 
 
 class AgentMode:
@@ -14,51 +13,73 @@ class AgentMode:
         self.persistent_memory = persistent_memory
     
     def run_task(self, goal: str):
-        """Execute a multi-step task to achieve the given goal."""
+        """Execute a multi-step autonomous task to achieve the given goal."""
         try:
-            # Get task breakdown from Gemini
-            breakdown_prompt = f"Break down this goal into 3-5 numbered steps: {goal}"
-            steps_text = self.llm.generate_reply(breakdown_prompt, "")
+            self.tts.speak(f"Starting autonomous agent mode for: {goal}")
             
-            # Extract numbered steps
-            steps = re.findall(r'\d+[.)]\s*(.+)', steps_text)
+            reasoning_trace = [f"Goal: {goal}"]
+            step_count = 0
+            max_steps = 5
             
-            if not steps:
-                self.tts.speak("I couldn't break down the task properly.")
-                return
-            
-            self.tts.speak(f"I'll complete this task in {len(steps)} steps.")
-            
-            results = []
-            
-            # Execute each step
-            for i, step in enumerate(steps, 1):
-                self.tts.speak(f"Step {i}: {step}")
+            while step_count < max_steps:
+                step_count += 1
                 
-                # Decide which tool to use
-                step_lower = step.lower()
+                # Ask Gemini to decide next action
+                context = "\n".join(reasoning_trace[-3:])  # Last 3 steps for context
+                decision_prompt = f"""You are an autonomous AI agent.
+Goal: {goal}
+Previous actions: {context}
+Decide the next best action to achieve the goal.
+Respond with one of:
+- SEARCH: <query>
+- CODE: <task>
+- OPEN: <app>
+- COMPLETE: <summary>"""
                 
-                if any(word in step_lower for word in ["search", "find", "look up", "research"]):
-                    result = search_web(step)
-                elif any(word in step_lower for word in ["open", "launch", "start", "run"]):
-                    result = open_app(step)
-                elif any(word in step_lower for word in ["code", "program", "script", "write"]):
-                    result = self.self_coder.generate_code(step)
+                decision = self.llm.generate_reply(decision_prompt, "")
+                reasoning_trace.append(f"Step {step_count} Decision: {decision}")
+                
+                self.tts.speak(f"Step {step_count}: {decision.split(':', 1)[0] if ':' in decision else decision}")
+                
+                # Execute the decided action
+                if decision.startswith("SEARCH:"):
+                    query = decision.split("SEARCH:", 1)[1].strip()
+                    result = search_web(query)
+                    reasoning_trace.append(f"Search result: {result[:200]}...")
+                    
+                elif decision.startswith("CODE:"):
+                    task = decision.split("CODE:", 1)[1].strip()
+                    result = self.self_coder.generate_code(task)
+                    reasoning_trace.append(f"Code generated for: {task}")
+                    
+                elif decision.startswith("OPEN:"):
+                    app = decision.split("OPEN:", 1)[1].strip()
+                    result = open_app(app)
+                    reasoning_trace.append(f"Opened: {app}")
+                    
+                elif decision.startswith("COMPLETE:"):
+                    summary = decision.split("COMPLETE:", 1)[1].strip()
+                    reasoning_trace.append(f"Task completed: {summary}")
+                    self.tts.speak(f"Task completed: {summary}")
+                    break
+                    
                 else:
-                    # Use Gemini for general tasks
-                    result = self.llm.generate_reply(step, "")
+                    # Fallback - treat as general reasoning
+                    reasoning_trace.append(f"Reasoning: {decision}")
                 
-                results.append(f"Step {i}: {result}")
-                self.memory.add(f"Agent Step {i}", result)
-                self.persistent_memory.save(f"Agent Step {i}", result)
+                # Save progress
+                self.memory.add(f"Agent Step {step_count}", decision)
+                self.persistent_memory.save(f"Agent Step {step_count}", decision)
                 
                 self.tts.speak("Step completed.")
             
-            # Final summary
-            summary = f"Task completed successfully. I executed {len(steps)} steps to achieve: {goal}"
-            self.tts.speak(summary)
-            self.memory.add("Agent Task", summary)
-            self.persistent_memory.save("Agent Task", summary)
+            # Save full reasoning trace
+            full_trace = "\n".join(reasoning_trace)
+            self.memory.add("Agent Reasoning Trace", full_trace)
+            self.persistent_memory.save("Agent Reasoning Trace", full_trace)
+            
+            if step_count >= max_steps:
+                self.tts.speak("Maximum steps reached. Task may need manual completion.")
             
         except Exception as e:
-            self.tts.speak("I encountered an error while executing the task.")
+            self.tts.speak("I encountered an error during autonomous execution.")
