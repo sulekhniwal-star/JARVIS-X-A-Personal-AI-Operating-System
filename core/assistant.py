@@ -13,6 +13,8 @@ from core.agent_mode import AgentMode
 from core.skill_learner import SkillLearner
 from core.life_os import LifeOS
 from core.self_improver import SelfImprover
+from core.safety import SafetyManager
+from core.life_automation import LifeAutomation
 from utils.memory import Memory
 from utils.persistent_memory import PersistentMemory
 from utils.file_indexer import FileIndexer
@@ -36,6 +38,8 @@ class JarvisAssistant:
         self.skill_learner = SkillLearner()
         self.life_os = LifeOS()
         self.self_improver = SelfImprover(self.memory, self.persistent_memory)
+        self.safety_manager = SafetyManager()
+        self.life_automation = LifeAutomation(self.memory, self.persistent_memory)
         self.memory = Memory()
         self.persistent_memory = PersistentMemory()
         self.file_indexer = FileIndexer("C:\\")
@@ -43,6 +47,8 @@ class JarvisAssistant:
         self.routines_manager = RoutinesManager()
         self.sleeping = False
         self.last_command = None
+        self._start_routine_checker()
+        self._start_proactive_assistant()
     
     def _get_combined_context(self) -> str:
         """Get combined context from persistent and short-term memory."""
@@ -119,6 +125,24 @@ class JarvisAssistant:
         
         routine_thread = threading.Thread(target=check_routines, daemon=True)
         routine_thread.start()
+    
+    def _start_proactive_assistant(self):
+        """Start background thread for proactive assistance."""
+        import time
+        
+        def proactive_check():
+            while True:
+                try:
+                    time.sleep(1800)  # Wait 30 minutes
+                    if not self.sleeping:  # Only suggest when awake
+                        suggestion = self.life_automation.proactive_assist()
+                        if suggestion:
+                            self.tts.speak(suggestion)
+                except Exception:
+                    pass
+        
+        proactive_thread = threading.Thread(target=proactive_check, daemon=True)
+        proactive_thread.start()
     
     def run(self):
         """Main assistant loop."""
@@ -255,6 +279,9 @@ class JarvisAssistant:
                     # Check for PC control commands
                     if command_lower.startswith("type "):
                         text_to_type = command[5:].strip()  # Remove "type " prefix
+                        if not self.safety_manager.is_safe(text_to_type):
+                            self.tts.speak("That action is not permitted for safety reasons.")
+                            continue
                         response = pc_control.type_text(text_to_type)
                         
                         response = self.personality.apply_style(response)
@@ -265,6 +292,9 @@ class JarvisAssistant:
                     
                     if command_lower.startswith("press "):
                         key_to_press = command[6:].strip()  # Remove "press " prefix
+                        if not self.safety_manager.is_safe(key_to_press):
+                            self.tts.speak("That action is not permitted for safety reasons.")
+                            continue
                         response = pc_control.press_key(key_to_press)
                         
                         response = self.personality.apply_style(response)
@@ -275,6 +305,9 @@ class JarvisAssistant:
                     
                     if command_lower.startswith("open "):
                         app_to_open = command[5:].strip()  # Remove "open " prefix
+                        if not self.safety_manager.is_safe(app_to_open):
+                            self.tts.speak("That action is not permitted for safety reasons.")
+                            continue
                         response = pc_control.open_app(app_to_open)
                         
                         response = self.personality.apply_style(response)
@@ -332,12 +365,18 @@ class JarvisAssistant:
                         # Listen for the task
                         task_command = self.stt.listen()
                         if task_command:
+                            if not self.safety_manager.is_safe(task_command):
+                                self.tts.speak("That action is not permitted for safety reasons.")
+                                continue
                             agent = AgentMode(self.tts, self.memory, self.persistent_memory)
                             agent.run_task(task_command)
                         continue
                     
                     if "complete this task:" in command_lower:
                         task = command_lower.split("complete this task:", 1)[1].strip()
+                        if not self.safety_manager.is_safe(task):
+                            self.tts.speak("That action is not permitted for safety reasons.")
+                            continue
                         agent = AgentMode(self.tts, self.memory, self.persistent_memory)
                         agent.run_task(task)
                         continue
@@ -349,6 +388,10 @@ class JarvisAssistant:
                             task = command_lower.split("write code for", 1)[1].strip()
                         else:
                             task = command_lower.split("generate code for", 1)[1].strip()
+                        
+                        if not self.safety_manager.is_safe(task):
+                            self.tts.speak("That action is not permitted for safety reasons.")
+                            continue
                         
                         self.self_coder.generate_code(task)
                         response = "I've generated the code for you, Sulekh."
@@ -427,6 +470,9 @@ class JarvisAssistant:
                     if intent == "time":
                         response = get_time_date()
                     elif intent == "system":
+                        if not self.safety_manager.is_safe(command):
+                            self.tts.speak("That action is not permitted for safety reasons.")
+                            continue
                         response = open_app(command)
                     elif intent == "search":
                         response = search_web(command)
