@@ -1,6 +1,7 @@
 """Main Jarvis assistant."""
 
 import os
+import threading
 from core.speech_to_text import SpeechToText
 from core.text_to_speech import TextToSpeech
 from core.gemini_llm import GeminiLLM
@@ -95,6 +96,23 @@ class JarvisAssistant:
             self.tts.speak(f"System check failed: {', '.join(failed_systems)} not operational.")
         else:
             self.tts.speak("All systems operational. Memory, voice, and intelligence are online.")
+    
+    def _start_routine_checker(self):
+        """Start background thread to check for due routines."""
+        import time
+        
+        def check_routines():
+            while True:
+                try:
+                    due_tasks = self.routines_manager.check_due_tasks()
+                    for task in due_tasks:
+                        self.tts.speak(f"Routine reminder: {task}")
+                except Exception:
+                    pass
+                time.sleep(60)  # Check every 60 seconds
+        
+        routine_thread = threading.Thread(target=check_routines, daemon=True)
+        routine_thread.start()
     
     def run(self):
         """Main assistant loop."""
