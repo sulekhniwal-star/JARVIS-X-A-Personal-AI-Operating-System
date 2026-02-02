@@ -51,7 +51,11 @@ class SkillManager:
         Executes a skill by name.
         """
         if skill_name in self.skills:
-            return self.skills[skill_name]["function"](*args, **kwargs)
+            try:
+                return self.skills[skill_name]["function"](*args, **kwargs)
+            except Exception as e:
+                print(f"Error executing skill '{skill_name}': {e}")
+                raise
         else:
             return f"Skill '{skill_name}' not found."
 

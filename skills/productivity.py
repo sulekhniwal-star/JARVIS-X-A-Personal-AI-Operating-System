@@ -323,6 +323,13 @@ class ProductivitySkill:
             r"add task (.+)",
             r"new task (.+)",
             r"create task (.+)",
+        ]
+        
+        for pattern in patterns:
+            import re
+            match = re.search(pattern, text, re.IGNORECASE)
+            if match:
+                return match.group(1).strip()
         return None
     
     def _extract_priority(self, text: str) -> str:
@@ -347,6 +354,13 @@ class ProductivitySkill:
         patterns = [
             r"remind me to (.+)",
             r"reminder (.+)",
+        ]
+        
+        for pattern in patterns:
+            import re
+            match = re.search(pattern, text, re.IGNORECASE)
+            if match:
+                return match.group(1).strip()
         return None
     
     def _extract_reminder_time(self, text: str) -> Optional[datetime]:
@@ -362,6 +376,12 @@ class ProductivitySkill:
     
     def _extract_event_description(self, text: str) -> Optional[str]:
         """Extract event description."""
+        patterns = [
+            r"schedule (.+)",
+            r"meeting (.+)",
+            r"appointment (.+)"
+        ]
+        
         for pattern in patterns:
             import re
             match = re.search(pattern, text, re.IGNORECASE)

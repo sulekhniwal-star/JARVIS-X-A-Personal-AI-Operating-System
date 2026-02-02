@@ -1,23 +1,12 @@
 from typing import Any
 from duckduckgo_search import DDGS  # type: ignore
-import signal
 
 
 def search_web(query: str) -> str:
     """Search web using DuckDuckGo and return formatted results."""
-    
-    def timeout_handler(signum: Any, frame: Any) -> None:
-        raise TimeoutError("Search timeout")
-    
     try:
-        # Set 5-second timeout
-        signal.signal(signal.SIGALRM, timeout_handler)  # type: ignore
-        signal.alarm(5)  # type: ignore
-        
-        with DDGS() as ddgs:
+        with DDGS(timeout=5) as ddgs:
             results = list(ddgs.text(query, max_results=3))
-        
-        signal.alarm(0)  # type: ignore  # Cancel timeout
         
         if not results:
             return "I couldn't find reliable results right now."
@@ -30,6 +19,5 @@ def search_web(query: str) -> str:
         
         return formatted.strip()
     
-    except (TimeoutError, Exception):
-        signal.alarm(0)  # type: ignore  # Ensure timeout is cancelled
+    except Exception:
         return "I couldn't find reliable results right now."

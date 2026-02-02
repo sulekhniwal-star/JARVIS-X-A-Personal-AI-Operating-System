@@ -30,8 +30,6 @@ from skills.system_control import open_app
 from skills import pc_control
 from skills.email_sender import send_email
 from core.skill_manager import SkillManager
-from utils.memory import Memory
-from utils.persistent_memory import PersistentMemory
 from hud import JarvisOverlay
 import tkinter as tk
 
@@ -52,9 +50,7 @@ class JarvisAssistant:
         self.self_improver = SelfImprover(self.memory, self.persistent_memory)
         self.safety_manager = SafetyManager()
         self.life_automation = LifeAutomation(self.memory, self.persistent_memory)
-        self.memory = Memory()
-        self.persistent_memory = PersistentMemory()
-        self.file_indexer = FileIndexer("C:\\")
+        self.file_indexer = FileIndexer()
         self.goals_manager = GoalsManager()
         self.routines_manager = RoutinesManager()
         self.skill_manager = SkillManager()

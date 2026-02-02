@@ -58,12 +58,13 @@ def main():
         
         # Validate configuration
         print("🔧 Validating configuration...")
-        if not validate_config():
-            print("⚠️  Configuration validation failed.")
+        try:
+            validate_config()
+            print("✅ Configuration validated successfully!")
+        except ValueError as e:
+            print(f"⚠️  Configuration validation failed: {e}")
             print("   JARVIS will run with limited features.")
             print("   Add GEMINI_API_KEY to .env for full functionality.")
-        else:
-            print("✅ Configuration validated successfully!")
         
         # Optional authentication (can be skipped for development)
         auth_enabled = os.getenv("ENABLE_FACE_AUTH", "false").lower() == "true"
