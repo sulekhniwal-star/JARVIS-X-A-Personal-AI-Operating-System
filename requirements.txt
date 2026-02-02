@@ -8,7 +8,7 @@ beautifulsoup4==4.12.2
 # Speech to Text
 sounddevice==0.4.7
 faster-whisper==1.0.3
-numpy>=1.26.0,<2.0
+numpy>=1.26.0
 
 # Text to Speech
 pyttsx3==2.98

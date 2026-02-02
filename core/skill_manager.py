@@ -1,3 +1,4 @@
+"""Skill management module for JARVIS-X dynamic skill loading and execution."""
 import importlib
 import inspect
 import os
@@ -27,8 +28,16 @@ class SkillManager:
                     module = importlib.import_module(module_name)
                     for attribute_name in dir(module):
                         attribute = getattr(module, attribute_name)
-                        if inspect.isfunction(attribute) and not attribute_name.startswith("__"):
-                            # We'll use the function name as the skill name
+                        if inspect.isclass(attribute) and not attribute_name.startswith("__"):
+                            # Handle class-based skills (new format)
+                            if hasattr(attribute, 'can_handle') and hasattr(attribute, 'execute'):
+                                skill_instance = attribute()
+                                self.skills[attribute_name.lower()] = {
+                                    "instance": skill_instance,
+                                    "docstring": inspect.getdoc(attribute)
+                                }
+                        elif inspect.isfunction(attribute) and not attribute_name.startswith("__"):
+                            # Handle function-based skills (legacy format)
                             self.skills[attribute_name] = {
                                 "function": attribute,
                                 "docstring": inspect.getdoc(attribute)
@@ -52,10 +61,17 @@ class SkillManager:
         """
         if skill_name in self.skills:
             try:
-                return self.skills[skill_name]["function"](*args, **kwargs)
+                skill_data = self.skills[skill_name]
+                if "instance" in skill_data:
+                    # Class-based skill
+                    return skill_data["instance"].execute(*args, **kwargs)
+                elif "function" in skill_data:
+                    # Function-based skill
+                    return skill_data["function"](*args, **kwargs)
+                else:
+                    return f"Skill '{skill_name}' is not properly configured."
             except Exception as e:
                 print(f"Error executing skill '{skill_name}': {e}")
                 raise
         else:
             return f"Skill '{skill_name}' not found."
-

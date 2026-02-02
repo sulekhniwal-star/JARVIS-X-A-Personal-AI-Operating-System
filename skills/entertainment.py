@@ -6,7 +6,7 @@ from loguru import logger
 
 class EntertainmentSkill:
     """Provides entertainment features using free APIs."""
-    
+
     def __init__(self):
         self.api_manager = SyncAPIManager()
         self.commands = {
@@ -19,7 +19,7 @@ class EntertainmentSkill:
             "nasa": ["space", "nasa", "astronomy", "space picture"],
             "trivia": ["trivia", "quiz", "test me", "brain teaser"]
         }
-    
+
     def can_handle(self, text: str) -> bool:
         """Check if this skill can handle the request."""
         text_lower = text.lower()
@@ -27,51 +27,51 @@ class EntertainmentSkill:
             if any(cmd in text_lower for cmd in command_list):
                 return True
         return False
-    
+
     def execute(self, text: str) -> str:
         """Execute entertainment command."""
         text_lower = text.lower()
-        
+
         try:
             # Quote requests
             if any(cmd in text_lower for cmd in self.commands["quote"]):
                 return self._get_quote()
-            
+
             # Joke requests
             elif any(cmd in text_lower for cmd in self.commands["joke"]):
                 return self._get_joke()
-            
+
             # Fact requests
             elif any(cmd in text_lower for cmd in self.commands["fact"]):
                 return self._get_fact()
-            
+
             # Advice requests
             elif any(cmd in text_lower for cmd in self.commands["advice"]):
                 return self._get_advice()
-            
+
             # Cat fact requests
             elif any(cmd in text_lower for cmd in self.commands["cat_fact"]):
                 return self._get_cat_fact()
-            
+
             # Dog image requests
             elif any(cmd in text_lower for cmd in self.commands["dog_image"]):
                 return self._get_dog_image()
-            
+
             # NASA requests
             elif any(cmd in text_lower for cmd in self.commands["nasa"]):
                 return self._get_nasa_info()
-            
+
             # Trivia requests
             elif any(cmd in text_lower for cmd in self.commands["trivia"]):
                 return self._get_trivia()
-            
+
             else:
                 return self._get_random_entertainment()
-                
+
         except Exception as e:
             logger.error(f"Entertainment skill error: {e}")
             return "Sorry, I'm having trouble with entertainment features right now."
-    
+
     def _get_quote(self) -> str:
         """Get inspirational quote."""
         try:
@@ -80,7 +80,7 @@ class EntertainmentSkill:
         except Exception as e:
             logger.error(f"Quote error: {e}")
             return "Here's a quote: 'The only way to do great work is to love what you do.' - Steve Jobs"
-    
+
     def _get_joke(self) -> str:
         """Get random joke."""
         try:
@@ -89,7 +89,7 @@ class EntertainmentSkill:
         except Exception as e:
             logger.error(f"Joke error: {e}")
             return "Why don't scientists trust atoms? Because they make up everything!"
-    
+
     def _get_fact(self) -> str:
         """Get random fact."""
         try:
@@ -98,7 +98,7 @@ class EntertainmentSkill:
         except Exception as e:
             logger.error(f"Fact error: {e}")
             return "Here's a fact: The human brain contains approximately 86 billion neurons."
-    
+
     def _get_advice(self) -> str:
         """Get random advice."""
         try:
@@ -107,7 +107,7 @@ class EntertainmentSkill:
         except Exception as e:
             logger.error(f"Advice error: {e}")
             return "Here's some advice: Take time to make your soul happy."
-    
+
     def _get_cat_fact(self) -> str:
         """Get cat fact."""
         try:
@@ -116,7 +116,7 @@ class EntertainmentSkill:
         except Exception as e:
             logger.error(f"Cat fact error: {e}")
             return "Cat fact: Cats sleep 12-16 hours per day."
-    
+
     def _get_dog_image(self) -> str:
         """Get dog image."""
         try:
@@ -125,7 +125,7 @@ class EntertainmentSkill:
         except Exception as e:
             logger.error(f"Dog image error: {e}")
             return "I'd show you a cute dog picture, but I'm having trouble accessing the image service right now."
-    
+
     def _get_nasa_info(self) -> str:
         """Get NASA astronomy picture."""
         try:
@@ -134,7 +134,7 @@ class EntertainmentSkill:
         except Exception as e:
             logger.error(f"NASA error: {e}")
             return "I'm having trouble accessing NASA's astronomy data right now."
-    
+
     def _get_trivia(self) -> str:
         """Get random trivia."""
         trivia_questions = [
@@ -145,7 +145,7 @@ class EntertainmentSkill:
             "Which mammal is known to have the most powerful bite? (Answer: Hippopotamus)"
         ]
         return f"Trivia time! {random.choice(trivia_questions)}"
-    
+
     def _get_random_entertainment(self) -> str:
         """Get random entertainment content."""
         options = [

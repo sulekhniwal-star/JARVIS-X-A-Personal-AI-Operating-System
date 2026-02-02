@@ -17,40 +17,40 @@ class WakeWordDetector:
 
     def is_wake_word(self, text: str) -> bool:
         """Check if the wake word is present as a full word in the text.
-        
+
         - Case-insensitive
         - Ignores punctuation
         - Returns True only if wake word exists as a full word
         """
         # Normalize text: lower case, remove punctuation
         normalized_text = re.sub(r'[^\w\s]', '', text.lower())
-        
+
         # Check for wake words
         for wake in self.wake_words:
             if wake in normalized_text:
                 return True
-        
+
         return False
-    
+
     def is_sleep_command(self, text: str) -> bool:
         """Check if text contains sleep command."""
         normalized_text = text.lower()
         return any(sleep_cmd in normalized_text for sleep_cmd in self.sleep_words)
-    
+
     def detect(self) -> bool:
         """Detect wake word from audio input."""
         # For now, return True to simulate wake word detection
         # In a real implementation, this would listen for audio input
         return True
-    
+
     def start_listening(self):
         """Start continuous wake word detection."""
         self.is_listening = True
-        
+
     def stop_listening(self):
         """Stop wake word detection."""
         self.is_listening = False
-        
+
     def reset_wake_detection(self):
         """Reset wake detection flag."""
         self.wake_detected = False

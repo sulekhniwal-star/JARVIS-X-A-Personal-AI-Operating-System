@@ -45,7 +45,7 @@ class TextToSpeech:
 
         try:
             self._init_engine()
-            
+
             # Apply voice profile settings
             if self.voice_mode == "jarvis":
                 # Slower rate (15% slower)
@@ -61,7 +61,7 @@ class TextToSpeech:
                 time.sleep(0.4)
             else:  # normal mode
                 self._engine.setProperty('rate', 180)  # type: ignore
-            
+
             self._engine.say(text)  # type: ignore
             self._engine.runAndWait()  # type: ignore
         except Exception as e:

@@ -7,7 +7,7 @@ class FileIndexer:
         self.root_dir = root_dir
         self.index: List[Dict[str, str]] = []
         self.build_index()
-    
+
     def build_index(self) -> None:
         """Build file index by walking directory tree."""
         self.index = []
@@ -21,17 +21,17 @@ class FileIndexer:
                     })
         except Exception:
             pass
-    
+
     def search(self, query: str) -> List[str]:
         """Search for files matching query (case-insensitive, partial match)."""
         if not query:
             return []
-        
+
         query_lower = query.lower()
         matches: List[str] = []
-        
+
         for entry in self.index:
             if query_lower in entry["name"].lower():
                 matches.append(entry["path"])
-        
+
         return matches[:5]  # Return top 5 matches

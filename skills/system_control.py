@@ -13,7 +13,7 @@ def open_app(app_name: str) -> str:
     app_lower = app_name.lower()
     if app_lower not in ALLOWED_APPS:
         return f"App '{app_name}' is not allowed"
-    
+
     try:
         subprocess.Popen(ALLOWED_APPS[app_lower])
         return f"Opening {app_name}"

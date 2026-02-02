@@ -21,18 +21,18 @@ def check_python_version():
         print(f"   Current version: {sys.version}")
         print("   Please upgrade Python and try again.")
         return False
-    
+
     print(f"✅ Python version: {sys.version.split()[0]}")
     return True
 
 def create_virtual_environment():
     """Create virtual environment."""
     print("\\n📦 Setting up virtual environment...")
-    
+
     if os.path.exists(".venv"):
         print("   Virtual environment already exists.")
         return True
-    
+
     try:
         subprocess.run([sys.executable, "-m", "venv", ".venv"], check=True)
         print("✅ Virtual environment created successfully!")
@@ -44,13 +44,13 @@ def create_virtual_environment():
 def install_dependencies():
     """Install required dependencies."""
     print("\\n📚 Installing dependencies...")
-    
+
     # Determine the correct pip path
     if os.name == 'nt':  # Windows
         pip_path = os.path.join(".venv", "Scripts", "pip")
     else:  # Unix/Linux/macOS
         pip_path = os.path.join(".venv", "bin", "pip")
-    
+
     try:
         subprocess.run([pip_path, "install", "--upgrade", "pip"], check=True)
         subprocess.run([pip_path, "install", "-r", "requirements.txt"], check=True)
@@ -63,13 +63,13 @@ def install_dependencies():
 def setup_environment_file():
     """Setup environment configuration file."""
     print("\\n⚙️  Setting up environment configuration...")
-    
+
     if os.path.exists(".env"):
         print("   .env file already exists.")
         response = input("   Do you want to recreate it? (y/N): ").lower()
         if response != 'y':
             return True
-    
+
     if os.path.exists(".env.template"):
         shutil.copy(".env.template", ".env")
         print("✅ Created .env file from template.")
@@ -93,42 +93,42 @@ WAKE_WORD=jarvis
 def create_directories():
     """Create necessary directories."""
     print("\\n📁 Creating directories...")
-    
+
     directories = [
         "logs",
         "data",
         "temp",
         "exports"
     ]
-    
+
     for directory in directories:
         os.makedirs(directory, exist_ok=True)
-    
+
     print("✅ Directories created successfully!")
     return True
 
 def test_installation():
     """Test the installation."""
     print("\\n🧪 Testing installation...")
-    
+
     try:
         # Test imports
         import google.generativeai
         import requests
         import pyttsx3
         print("✅ Core dependencies working!")
-        
+
         # Test API manager
         from core.api_manager import SyncAPIManager
         api_manager = SyncAPIManager()
         print("✅ API manager working!")
-        
+
         # Test skills
         from skills.entertainment import EntertainmentSkill
         from skills.information import InformationSkill
         from skills.productivity import ProductivitySkill
         print("✅ Enhanced skills working!")
-        
+
         return True
     except ImportError as e:
         print(f"❌ Import error: {e}")
@@ -142,7 +142,7 @@ def show_api_setup_guide():
     print("\\n" + "=" * 60)
     print("           🔑 FREE API SETUP GUIDE")
     print("=" * 60)
-    
+
     apis = [
         {
             "name": "Google Gemini AI (REQUIRED)",
@@ -169,13 +169,13 @@ def show_api_setup_guide():
             "env_var": "TELEGRAM_BOT_TOKEN"
         }
     ]
-    
+
     for i, api in enumerate(apis, 1):
         print(f"\\n{i}. {api['name']}")
         print(f"   🌐 URL: {api['url']}")
         print(f"   📝 Description: {api['description']}")
         print(f"   🔧 Environment Variable: {api['env_var']}")
-    
+
     print("\\n" + "=" * 60)
     print("💡 TIP: Many features work without API keys!")
     print("   - Jokes, quotes, facts, crypto prices are completely free")
@@ -187,7 +187,7 @@ def show_usage_examples():
     print("\\n" + "=" * 60)
     print("           🎯 USAGE EXAMPLES")
     print("=" * 60)
-    
+
     examples = [
         "🎭 Entertainment: 'Tell me a joke', 'Give me a quote', 'Random fact'",
         "📰 Information: 'Weather in London', 'Latest tech news', 'Bitcoin price'",
@@ -195,45 +195,45 @@ def show_usage_examples():
         "🖥️  System: 'Open Chrome', 'What time is it?', 'Help'",
         "💬 Chat: 'Hello Jarvis', 'How are you?', 'What can you do?'"
     ]
-    
+
     for example in examples:
         print(f"   {example}")
-    
+
     print("\\n💡 Just speak naturally - JARVIS understands context!")
 
 def main():
     """Main setup function."""
     print_banner()
-    
+
     # Check Python version
     if not check_python_version():
         return False
-    
+
     # Create virtual environment
     if not create_virtual_environment():
         return False
-    
+
     # Install dependencies
     if not install_dependencies():
         return False
-    
+
     # Setup environment file
     if not setup_environment_file():
         return False
-    
+
     # Create directories
     if not create_directories():
         return False
-    
+
     # Test installation
     if not test_installation():
         print("\\n⚠️  Installation test failed, but setup completed.")
         print("   You may need to activate the virtual environment and install dependencies manually.")
-    
+
     # Show guides
     show_api_setup_guide()
     show_usage_examples()
-    
+
     print("\\n" + "=" * 60)
     print("           ✅ SETUP COMPLETE!")
     print("=" * 60)
@@ -246,7 +246,7 @@ def main():
         print("      source .venv/bin/activate")
     print("   3. Run JARVIS: python main.py")
     print("\\n🎉 Welcome to the future of AI assistance!")
-    
+
     return True
 
 if __name__ == "__main__":

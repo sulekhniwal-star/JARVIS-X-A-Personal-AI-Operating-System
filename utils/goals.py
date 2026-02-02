@@ -7,7 +7,7 @@ class GoalsManager:
         self._lock = threading.Lock()
         self._db_path = "jarvis_goals.db"
         self._init_db()
-    
+
     def _init_db(self):
         """Initialize goals database and table."""
         with self._lock:
@@ -21,14 +21,14 @@ class GoalsManager:
                     )
                 """)
                 conn.commit()
-    
+
     def add_goal(self, text: str):
         """Add a new goal."""
         with self._lock:
             with sqlite3.connect(self._db_path) as conn:
                 conn.execute("INSERT INTO goals (text) VALUES (?)", (text,))
                 conn.commit()
-    
+
     def list_goals(self) -> list[str]:
         """List all active goals."""
         with self._lock:
@@ -37,7 +37,7 @@ class GoalsManager:
                     "SELECT id, text FROM goals WHERE done = 0 ORDER BY timestamp"
                 )
                 return [f"{row[0]}. {row[1]}" for row in cursor.fetchall()]
-    
+
     def mark_done(self, goal_id: int):
         """Mark a goal as completed."""
         with self._lock:

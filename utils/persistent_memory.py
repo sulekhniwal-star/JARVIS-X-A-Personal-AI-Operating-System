@@ -8,7 +8,7 @@ class PersistentMemory:
         self._lock = threading.Lock()
         self._db_path = "jarvis_memory.db"
         self._init_db()
-    
+
     def _init_db(self):
         with self._lock:
             with sqlite3.connect(self._db_path) as conn:
@@ -21,7 +21,7 @@ class PersistentMemory:
                     )
                 """)
                 conn.commit()
-    
+
     def save(self, user_text: str, jarvis_text: str):
         with self._lock:
             with sqlite3.connect(self._db_path) as conn:
@@ -30,7 +30,7 @@ class PersistentMemory:
                     (user_text, jarvis_text)
                 )
                 conn.commit()
-    
+
     def fetch_last(self, n: int = 5) -> List[Tuple[str, str]]:
         with self._lock:
             with sqlite3.connect(self._db_path) as conn:

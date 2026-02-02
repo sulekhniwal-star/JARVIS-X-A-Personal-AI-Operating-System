@@ -14,54 +14,54 @@ class SkillRouter:
         self.entertainment_skill = EntertainmentSkill()
         self.information_skill = InformationSkill()
         self.productivity_skill = ProductivitySkill()
-    
+
     def route(self, text: str) -> str | None:
         """Route text to appropriate skill based on keywords."""
         text_lower = text.lower()
-        
+
         try:
             # Enhanced skills with API integration
             if self.entertainment_skill.can_handle(text):
                 return self.entertainment_skill.execute(text)
-            
+
             if self.information_skill.can_handle(text):
                 return self.information_skill.execute(text)
-            
+
             if self.productivity_skill.can_handle(text):
                 return self.productivity_skill.execute(text)
-            
+
             # Original skills (backward compatibility)
             # Small talk
             response = handle_small_talk(text)
             if response:
                 return response
-            
+
             # Time/date
             if any(word in text_lower for word in ["time", "date", "clock"]):
                 return get_time_date()
-            
+
             # System control
             if "open" in text_lower:
                 for app in ["chrome", "notepad", "calculator", "browser", "editor"]:
                     if app in text_lower:
                         return open_app(app)
-            
+
             if "shutdown" in text_lower:
                 return shutdown_system()
-            
+
             if "restart" in text_lower:
                 return restart_system()
-            
+
             # Help command
             if any(word in text_lower for word in ["help", "what can you do", "commands"]):
                 return self._get_help_message()
-            
+
             return None
-            
+
         except Exception as e:
             logger.error(f"Skill routing error: {e}")
             return "I encountered an error processing your request. Please try again."
-    
+
     def _get_help_message(self) -> str:
         """Get help message with available commands."""
         return """Here's what I can help you with:
@@ -99,7 +99,7 @@ class SkillRouter:
 • "Shutdown" / "Restart" - System control
 
 Just speak naturally - I'll understand what you need!"""
-    
+
     def get_available_skills(self) -> list:
         """Get list of available skills."""
         return [
